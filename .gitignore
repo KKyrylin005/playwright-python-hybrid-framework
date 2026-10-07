@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+
+# Test artifacts
+allure-results/
+allure-report/
+test-results/
+
+# Local config
+.env
+.idea/
+.vscode/
