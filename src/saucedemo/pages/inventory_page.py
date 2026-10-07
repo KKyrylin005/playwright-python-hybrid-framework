@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 from enum import StrEnum
 from typing import Self
@@ -9,6 +10,8 @@ from saucedemo.models import Product
 from saucedemo.pages.base_page import BasePage
 from saucedemo.pages.components import Header
 from saucedemo.utils.money import parse_price
+
+_ITEM_ID_PATTERN = re.compile(r"item-(\d+)-title-link")
 
 
 class SortOption(StrEnum):
@@ -44,8 +47,14 @@ class InventoryPage(BasePage):
         return self
 
     def get_product(self, name: str) -> Product:
-        price_text = self.get_text(self._item_card(name).get_by_test_id("inventory-item-price"))
-        return Product(name=name, price=parse_price(price_text))
+        card = self._item_card(name)
+        price_text = self.get_text(card.get_by_test_id("inventory-item-price"))
+        # Product id is only exposed in the title link: data-test="item-4-title-link"
+        link_test_id = card.locator("[data-test$='-title-link']").get_attribute("data-test") or ""
+        match = _ITEM_ID_PATTERN.fullmatch(link_test_id)
+        if match is None:
+            raise ValueError(f"Cannot read product id for {name!r} from {link_test_id!r}")
+        return Product(id=int(match.group(1)), name=name, price=parse_price(price_text))
 
     def get_product_names(self) -> list[str]:
         return [name.strip() for name in self.item_names.all_inner_texts()]

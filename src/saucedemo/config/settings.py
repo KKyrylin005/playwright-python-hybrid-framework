@@ -38,7 +38,12 @@ class Settings(BaseSettings):
     # Credentials (SauceDemo's are public demo values; real projects: no defaults)
     password: SecretStr = SecretStr("secret_sauce")
 
-    @field_validator("base_url")
+    # Restful-Booker API (public sandbox with documented demo credentials)
+    booker_base_url: str = "https://restful-booker.herokuapp.com"
+    booker_username: str = "admin"
+    booker_password: SecretStr = SecretStr("password123")
+
+    @field_validator("base_url", "booker_base_url")
     @classmethod
     def _strip_trailing_slash(cls, value: str) -> str:
         return value.rstrip("/")
