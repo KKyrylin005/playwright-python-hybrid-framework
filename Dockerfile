@@ -1,5 +1,14 @@
-# Image tag must match the playwright package version: browsers are baked into the image
+# Image tag must match the playwright version in poetry.lock: browsers are baked into the image
 ARG PLAYWRIGHT_VERSION=1.63.0
+
+# ---------- stage 1: pinned requirements from poetry.lock ----------
+FROM python:3.12-slim AS requirements
+RUN pip install --no-cache-dir "poetry==2.5.1" poetry-plugin-export
+WORKDIR /build
+COPY pyproject.toml poetry.lock ./
+RUN poetry export --only main --without-hashes --output requirements.txt
+
+# ---------- stage 2: test runner ----------
 FROM mcr.microsoft.com/playwright/python:v${PLAYWRIGHT_VERSION}-noble
 
 ARG PLAYWRIGHT_VERSION
@@ -14,12 +23,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 RUN chown pwuser:pwuser /app
 
-# Dependencies first: this layer is rebuilt only when pyproject.toml changes
-COPY pyproject.toml ./
-RUN python3 -c "import tomllib; print('\n'.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))" > /tmp/requirements.txt \
-    && pip install -r /tmp/requirements.txt "playwright==${PLAYWRIGHT_VERSION}"
+# Dependencies first: this layer is rebuilt only when poetry.lock changes
+COPY --from=requirements /build/requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt \
+    && python3 -c "import importlib.metadata as m, sys; v = m.version('playwright'); \
+sys.exit(0 if v == '${PLAYWRIGHT_VERSION}' else f'playwright {v} in lock != image ${PLAYWRIGHT_VERSION}')"
 
-COPY README.md ./
+COPY pyproject.toml README.md ./
 COPY src ./src
 RUN pip install --no-deps .
 

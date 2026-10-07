@@ -23,7 +23,9 @@ class BookingClient:
     # ---------- auth ----------
 
     def auth(self, username: str, password: str) -> APIResponse:
-        return self._send("POST", "/auth", data={"username": username, "password": password})
+        return self._send(
+            "POST", "/auth", data={"username": username, "password": password}, redact_body=True
+        )
 
     def create_token(self, username: str, password: str) -> str:
         # Restful-Booker answers 200 {"reason": "Bad credentials"} on failure, so check the body
@@ -53,13 +55,21 @@ class BookingClient:
     # ---------- transport ----------
 
     def _send(
-        self, method: str, url: str, *, token: str | None = None, **kwargs: Any
+        self,
+        method: str,
+        url: str,
+        *,
+        token: str | None = None,
+        redact_body: bool = False,
+        **kwargs: Any,
     ) -> APIResponse:
         headers = {"Cookie": f"token={token}"} if token else {}
         with allure.step(f"{method} {url}"):
             response = self._request.fetch(url, method=method, headers=headers, **kwargs)
+            # Reports are published publicly (GitHub Pages): never attach tokens
+            body = "<redacted>" if redact_body else response.text()
             allure.attach(
-                f"{response.status} {response.status_text}\n\n{response.text()}",
+                f"{response.status} {response.status_text}\n\n{body}",
                 name=f"{method} {url} -> {response.status}",
                 attachment_type=allure.attachment_type.TEXT,
             )
