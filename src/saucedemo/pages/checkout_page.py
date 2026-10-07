@@ -33,6 +33,11 @@ class CheckoutInfoPage(BasePage):
             self.fill(self.postal_code_input, customer.postal_code, "Postal Code")
         return self
 
+    def continue_expecting_error(self) -> Self:
+        """Negative path: validation keeps the user on this step."""
+        self.click(self.continue_button, "Continue")
+        return self
+
     def continue_to_overview(self) -> "CheckoutOverviewPage":
         self.click(self.continue_button, "Continue")
         return CheckoutOverviewPage(self.page).wait_until_loaded()
