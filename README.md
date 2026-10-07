@@ -45,6 +45,31 @@ Open the Allure report (requires Allure CLI):
 allure serve allure-results
 ```
 
+## Parallel run and flaky test policy
+
+```bash
+poetry run pytest -n auto --reruns 1 --only-rerun TimeoutError
+```
+
+- Only Playwright `TimeoutError` (an action could not complete: slow network, element late)
+  is retried, and only once. A failed `expect(...)` raises `AssertionError` and is **never**
+  retried: that is a real bug signal, and blanket retries hide it.
+- API tests against the shared public Restful-Booker sandbox carry
+  `@pytest.mark.flaky(reruns=2)`: the dependency is outside our control.
+- The trace of a failed first attempt is kept even if the retry passes, as evidence of flakiness.
+
+## Docker
+
+The image is based on `mcr.microsoft.com/playwright/python` (browsers preinstalled). Its tag
+must match the `playwright` package version, set via the `PLAYWRIGHT_VERSION` build arg.
+
+```bash
+docker compose run --rm tests
+```
+
+Results land in `artifacts/allure-results` and `artifacts/test-results`. On a Linux host
+create `artifacts/` before the first run so the container user (`pwuser`) can write to it.
+
 ## Debugging a failure
 
 Failed tests attach `playwright-trace.zip` to the Allure report and save it to `test-results/`.

@@ -13,6 +13,7 @@ dist/
 allure-results/
 allure-report/
 test-results/
+artifacts/
 
 # Local config
 .env

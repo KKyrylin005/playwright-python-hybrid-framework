@@ -35,6 +35,9 @@ PHASE_REPORTS = pytest.StashKey[dict[str, pytest.TestReport]]()
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
     """Store setup/call reports on the item so fixtures can see the outcome in teardown."""
     report = yield
+    if report.when == "setup":
+        # pytest-rerunfailures reuses the item: drop reports from the previous attempt
+        item.stash[PHASE_REPORTS] = {}
     item.stash.setdefault(PHASE_REPORTS, {})[report.when] = report
     return report
 
