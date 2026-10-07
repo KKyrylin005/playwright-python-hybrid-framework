@@ -145,6 +145,9 @@ def page(
     context: BrowserContext, settings: Settings, request: pytest.FixtureRequest
 ) -> Generator[Page, None, None]:
     """Page torn down before its context, so the screenshot is taken while the page is alive."""
+    # Part of Allure's historyId: keeps results from the CI browser matrix apart
+    # instead of merging them into "retries" of a single test
+    allure.dynamic.parameter("browser", settings.browser)
     page = context.new_page()
     yield page
 

@@ -1,7 +1,13 @@
 # SauceDemo E2E Automation Framework
 
-UI and hybrid end-to-end tests for [SauceDemo](https://www.saucedemo.com/)
-built with **Python 3.12, Playwright, pytest, Allure**.
+[![tests](https://github.com/KKyrylin005/playwright-python-hybrid-framework/actions/workflows/tests.yml/badge.svg)](https://github.com/KKyrylin005/playwright-python-hybrid-framework/actions/workflows/tests.yml)
+[![Allure report](https://img.shields.io/badge/Allure-report-orange)](https://kkyrylin005.github.io/playwright-python-hybrid-framework/)
+
+UI, hybrid and API end-to-end tests for [SauceDemo](https://www.saucedemo.com/) and
+[Restful-Booker](https://restful-booker.herokuapp.com/), built with
+**Python 3.12, Playwright, pytest, Allure**.
+
+**Live report:** https://kkyrylin005.github.io/playwright-python-hybrid-framework/
 
 ## Stack
 
@@ -33,10 +39,14 @@ poetry run playwright install chromium
 poetry run pytest -m smoke
 ```
 
-Run headed in Firefox:
+Run headed in Firefox (or put the variables into `.env`, see `.env.example`):
 
 ```bash
 E2E_BROWSER=firefox E2E_HEADLESS=false poetry run pytest
+```
+
+```powershell
+$env:E2E_BROWSER="firefox"; $env:E2E_HEADLESS="false"; poetry run pytest
 ```
 
 Open the Allure report (requires Allure CLI):
@@ -58,10 +68,24 @@ poetry run pytest -n auto --reruns 1 --only-rerun TimeoutError
   `@pytest.mark.flaky(reruns=2)`: the dependency is outside our control.
 - The trace of a failed first attempt is kept even if the retry passes, as evidence of flakiness.
 
+## CI/CD (GitHub Actions)
+
+| Job | What it does |
+|---|---|
+| Lint | `poetry check --lock`, ruff lint and format check |
+| E2E | UI + hybrid tests in a Chromium / Firefox / WebKit matrix, parallel via xdist |
+| API | Restful-Booker tests (separate job: an outage of the public sandbox stays visible but isolated) |
+| Docker | Builds the image and runs the smoke suite inside it |
+| Allure report | Merges all results, restores trend history from the live site, deploys to GitHub Pages |
+
+The report is published from `main` even when tests fail, which is when it is needed most.
+Each browser run appears separately in Allure thanks to the `browser` parameter.
+
 ## Docker
 
 The image is based on `mcr.microsoft.com/playwright/python` (browsers preinstalled). Its tag
-must match the `playwright` package version, set via the `PLAYWRIGHT_VERSION` build arg.
+must match the `playwright` version in `poetry.lock`; the build fails fast if they diverge.
+Dependencies are exported from `poetry.lock`, so the image uses exactly the locked versions.
 
 ```bash
 docker compose run --rm tests
@@ -78,3 +102,7 @@ Open it with:
 ```bash
 poetry run playwright show-trace test-results/<test>.zip
 ```
+
+> Traces record typed values, including passwords. SauceDemo's credentials are public demo
+> values, so publishing traces is fine here; for a real product, authenticate via
+> `storage_state` instead of the login form, or keep traces out of public reports.

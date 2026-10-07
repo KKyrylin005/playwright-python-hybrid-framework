@@ -2,7 +2,7 @@
 name = "saucedemo-e2e"
 version = "0.1.0"
 description = "E2E test automation framework for SauceDemo: Playwright + Pytest + Allure"
-authors = [{ name = "Your Name", email = "you@example.com" }]
+authors = [{ name = "Kirill Kirilin", email = "330312209+KKyrylin005@users.noreply.github.com" }]
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
