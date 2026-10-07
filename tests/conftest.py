@@ -1,11 +1,11 @@
 """Root fixtures: Playwright lifecycle, isolated contexts, failure artifacts, Page Objects."""
 
 import contextlib
-import json
 import re
 import sys
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import allure
 import pytest
@@ -21,10 +21,10 @@ from playwright.sync_api import (
 )
 
 from saucedemo.config import Settings, get_settings
-from saucedemo.models import User
+from saucedemo.data import load_users, make_customer
+from saucedemo.models import Customer, User
 from saucedemo.pages import LoginPage
 
-DATA_DIR = Path(__file__).parent / "data"
 PHASE_REPORTS = pytest.StashKey[dict[str, pytest.TestReport]]()
 
 
@@ -98,14 +98,23 @@ def browser(playwright_instance: Playwright, settings: Settings) -> Generator[Br
 
 
 @pytest.fixture
+def context_options(settings: Settings) -> dict[str, Any]:
+    """Extension point: override in a nested conftest to add storage_state, locale, etc."""
+    return {
+        "base_url": settings.base_url,
+        "viewport": {"width": settings.viewport_width, "height": settings.viewport_height},
+    }
+
+
+@pytest.fixture
 def context(
-    browser: Browser, settings: Settings, request: pytest.FixtureRequest
+    browser: Browser,
+    settings: Settings,
+    context_options: dict[str, Any],
+    request: pytest.FixtureRequest,
 ) -> Generator[BrowserContext, None, None]:
     """Fresh, isolated context per test, with optional Playwright tracing."""
-    context = browser.new_context(
-        base_url=settings.base_url,
-        viewport={"width": settings.viewport_width, "height": settings.viewport_height},
-    )
+    context = browser.new_context(**context_options)
     context.set_default_timeout(settings.timeout_ms)
 
     tracing_enabled = settings.trace_mode != "off"
@@ -153,14 +162,17 @@ def page(
 
 @pytest.fixture(scope="session")
 def users(settings: Settings) -> dict[str, User]:
-    raw = json.loads((DATA_DIR / "users.json").read_text(encoding="utf-8"))
-    password = settings.password.get_secret_value()
-    return {role: User(username=data["username"], password=password) for role, data in raw.items()}
+    return load_users(settings.password.get_secret_value())
 
 
 @pytest.fixture(scope="session")
 def standard_user(users: dict[str, User]) -> User:
     return users["standard"]
+
+
+@pytest.fixture
+def customer() -> Customer:
+    return make_customer()
 
 
 # ---------- page objects ----------
