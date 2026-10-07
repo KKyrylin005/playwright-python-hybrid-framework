@@ -5,7 +5,14 @@ from saucedemo.api import BookingClient
 from saucedemo.data import make_booking
 from saucedemo.models import Booking, CreatedBooking
 
-pytestmark = [pytest.mark.api, allure.epic("Restful-Booker"), allure.feature("Booking API")]
+pytestmark = [
+    pytest.mark.api,
+    # Shared public sandbox: it is reset periodically and has short outages.
+    # Our own app's tests never get blanket reruns - see "Flaky test policy" in README.
+    pytest.mark.flaky(reruns=2, reruns_delay=3),
+    allure.epic("Restful-Booker"),
+    allure.feature("Booking API"),
+]
 
 
 @pytest.mark.smoke

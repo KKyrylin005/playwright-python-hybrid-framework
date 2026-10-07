@@ -1,0 +1,26 @@
+services:
+  tests:
+    build: .
+    image: saucedemo-e2e:local
+    # Recommended by Playwright for Chromium: avoids crashes from the small default /dev/shm
+    ipc: host
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      E2E_HEADLESS: "true"
+      E2E_ARTIFACTS_DIR: artifacts/test-results
+    # Mount the parent folder: --clean-alluredir deletes the results dir itself,
+    # which is impossible for a mount point
+    volumes:
+      - ./artifacts:/app/artifacts
+    # `command` replaces CMD entirely, so repeat the flags when overriding:
+    #   docker compose run --rm tests --alluredir=artifacts/allure-results -n auto -m smoke
+    command:
+      - --alluredir=artifacts/allure-results
+      - -n
+      - auto
+      - --reruns
+      - "1"
+      - --only-rerun
+      - TimeoutError
