@@ -1,0 +1,47 @@
+[project]
+name = "saucedemo-e2e"
+version = "0.1.0"
+description = "E2E test automation framework for SauceDemo: Playwright + Pytest + Allure"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "playwright>=1.48",
+    "pytest>=8.3",
+    "allure-pytest>=2.13",
+    "pydantic-settings>=2.6",
+    "pytest-xdist>=3.6",
+    "pytest-rerunfailures>=14.0",
+]
+
+[tool.poetry]
+packages = [{ include = "saucedemo", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+ruff = ">=0.8"
+pre-commit = ">=4.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "N",        # pep8-naming
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "SIM",      # simplify
+    "PT",       # flake8-pytest-style
+    "RUF",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["saucedemo"]
