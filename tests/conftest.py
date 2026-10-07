@@ -2,6 +2,7 @@
 
 import contextlib
 import re
+import shutil
 import sys
 from collections.abc import Generator
 from pathlib import Path
@@ -25,6 +26,7 @@ from saucedemo.data import load_users, make_customer
 from saucedemo.models import Customer, User
 from saucedemo.pages import LoginPage
 
+ALLURE_CATEGORIES = Path(__file__).parent / "allure-categories.json"
 PHASE_REPORTS = pytest.StashKey[dict[str, pytest.TestReport]]()
 
 
@@ -43,7 +45,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
 
 
 def pytest_sessionfinish(session: pytest.Session) -> None:
-    """Write Allure environment info (controller process only under xdist)."""
+    """Write Allure environment info and categories (controller process only under xdist)."""
     if hasattr(session.config, "workerinput"):
         return
     allure_dir = session.config.getoption("allure_report_dir", default=None)
@@ -61,6 +63,7 @@ def pytest_sessionfinish(session: pytest.Session) -> None:
     Path(allure_dir, "environment.properties").write_text(
         "\n".join(f"{key}={value}" for key, value in env.items()), encoding="utf-8"
     )
+    shutil.copyfile(ALLURE_CATEGORIES, Path(allure_dir, "categories.json"))
 
 
 # ---------- helpers ----------

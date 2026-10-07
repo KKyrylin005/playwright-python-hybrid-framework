@@ -20,7 +20,7 @@ env:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint & unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -30,9 +30,17 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: poetry
       - run: poetry check --lock
-      - run: poetry install --no-interaction --only dev --no-root
+      - run: poetry install --no-interaction
       - run: poetry run ruff check --output-format=github .
       - run: poetry run ruff format --check .
+      - name: Unit tests (framework code, no browser)
+        run: poetry run pytest -m unit
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: allure-results-unit
+          path: allure-results
+          retention-days: 7
 
   e2e:
     name: E2E (${{ matrix.browser }})

@@ -22,7 +22,10 @@ def load_products() -> tuple[Product, ...]:
 
 
 def get_product(name: str) -> Product:
-    return next(product for product in load_products() if product.name == name)
+    for product in load_products():
+        if product.name == name:
+            return product
+    raise KeyError(f"Unknown product: {name!r}")  # e.g. a typo in @pytest.mark.cart
 
 
 def load_users(password: str) -> dict[str, User]:

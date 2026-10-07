@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Infrastructure: action timeout",
+    "description": "Playwright could not complete an action in time: slow network or late element. Retried once in CI.",
+    "matchedStatuses": ["broken", "failed"],
+    "messageRegex": "(?s).*TimeoutError.*"
+  },
+  {
+    "name": "Infrastructure: network or browser failure",
+    "matchedStatuses": ["broken", "failed"],
+    "messageRegex": "(?s).*(net::ERR_|ECONNRESET|ECONNREFUSED|Target page, context or browser has been closed).*"
+  },
+  {
+    "name": "Product defect",
+    "description": "An assertion failed: the application behaved differently from what the test expects.",
+    "matchedStatuses": ["failed"]
+  },
+  {
+    "name": "Test defect",
+    "description": "Unexpected exception in test or framework code (not an assertion).",
+    "matchedStatuses": ["broken"]
+  }
+]
